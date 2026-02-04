@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>身長グラフ表示アプリ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            width: 95%;
+            max-width: 800px;
+                        height: 90vh;
+            padding: 10px;
+
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group label {
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+        .input-group input {
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #checkbox-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        #checkbox-container label {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="input-group">
+            <label for="data-input">身長入力:</label>
+            <input type="text" id="data-input" placeholder="<名前#身長>形式で入力" value="<佐藤#102> <鈴木#115> <高橋#230> <田中#187> <伊藤#145> <渡辺#210> <山本#172> <中村#190> <小林#158> <加藤#205>">
+        </div>
+        <div id="checkbox-container"></div>
+        <canvas id="heightChart"  height="500px"></canvas>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInput = document.getElementById('data-input');
+            const checkboxContainer = document.getElementById('checkbox-container');
+            const ctx = document.getElementById('heightChart').getContext('2d');
+            let chart;
+
+            function parseInputData(input) {
+                return input.split(' ').map(item => {
+                    const [name, height] = item.replace(/[<>]/g, '').split('#');
+                    return { name, height: parseInt(height) };
+                });
+            }
+
+            function generateCheckboxes(data) {
+                checkboxContainer.innerHTML = '';
+                data.forEach((item, index) => {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `checkbox-${index}`;
+                    checkbox.checked = true;
+                    checkbox.dataset.index = index;
+                    checkbox.addEventListener('change', updateChart);
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `checkbox-${index}`;
+                    label.textContent = item.name;
+
+                    checkboxContainer.appendChild(checkbox);
+                    checkboxContainer.appendChild(label);
+                });
+            }
+
+            function generateChart(data) {
+                const filteredData = data.filter((_, index) => document.getElementById(`checkbox-${index}`).checked);
+                const labels = filteredData.map(item => item.name);
+                const heights = filteredData.map(item => item.height);
+                const colors = [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(199, 199, 199, 0.2)',
+                    'rgba(83, 102, 255, 0.2)',
+                    'rgba(250, 159, 64, 0.2)',
+                    'rgba(150, 100, 200, 0.2)'
+                ];
+                const borderColors = colors.map(color => color.replace('0.2', '1'));
+
+                if (chart) {
+                    chart.destroy();
+                }
+
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: '身長 (cm)',
+                            data: heights,
+                            backgroundColor: colors.slice(0, heights.length),
+                            borderColor: borderColors.slice(0, heights.length),
+                            borderWidth: 1,
+                            hoverBackgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#555',
+                                    font: {
+                                        size: 14
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#555',
+                                    font: {
+                                        size: 14
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#ddd',
+                                borderWidth: 1
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateChart() {
+                const inputData = parseInputData(dataInput.value);
+                generateChart(inputData);
+            }
+
+            dataInput.addEventListener('input', function() {
+                const inputData = parseInputData(dataInput.value);
+                generateCheckboxes(inputData);
+                generateChart(inputData);
+            });
+
+            // 初期データのセットアップ
+            const initialData = parseInputData(dataInput.value);
+            generateCheckboxes(initialData);
+            generateChart(initialData);
+        });
+    </script>
+</body>
+</html>
