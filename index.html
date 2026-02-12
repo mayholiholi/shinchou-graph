@@ -3,73 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>身長グラフ表示アプリ</title>
+    <title>身長グラフ</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+            align-items: flex-start;
         }
-        .container {
-            width: 95%;
-            max-width: 800px;
-                        height: 90vh;
-            padding: 10px;
 
+        .container {
+            width: 100%;
+            max-width: 860px;
         }
-        h1 {
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .header {
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            margin-bottom: 24px;
         }
+
+        .header h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 0.02em;
+        }
+
+        .header p {
+            font-size: 0.82em;
+            color: #888;
+            margin-top: 4px;
+        }
+
         .input-group {
             margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
         }
+
         .input-group label {
-            margin-bottom: 5px;
-            font-size: 1em;
+            display: block;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
         }
+
         .input-group input {
-            padding: 10px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.92em;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+            color: #333;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
         }
-        #checkbox-container {
+
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: #fff;
+        }
+
+        .checkbox-area {
             display: flex;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 24px;
         }
-        #checkbox-container label {
-            margin-right: 10px;
-            margin-bottom: 10px;
+
+        .checkbox-area .chip {
             display: flex;
             align-items: center;
-            font-size: 0.9em;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #f0f0f5;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            user-select: none;
+            font-size: 0.85em;
+            color: #444;
         }
+
+        .checkbox-area .chip:hover {
+            background: #e4e4ef;
+        }
+
+        .checkbox-area .chip.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .checkbox-area .chip input[type="checkbox"] {
+            display: none;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            margin-top: 8px;
+        }
+
         canvas {
-            max-width: 100%;
-            height: auto;
+            width: 100% !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
 </head>
 <body>
     <div class="container">
-        <div class="input-group">
-            <label for="data-input">身長入力:</label>
-            <input type="text" id="data-input" placeholder="<名前#身長>形式で入力" value="<佐藤#102> <鈴木#115> <高橋#230> <田中#187> <伊藤#145> <渡辺#210> <山本#172> <中村#190> <小林#158> <加藤#205>">
+        <div class="card">
+            <div class="header">
+                <h1>身長グラフ</h1>
+                <p>&lt;名前#身長&gt; 形式でスペース区切り入力</p>
+            </div>
+
+            <div class="input-group">
+                <label for="data-input">データ入力</label>
+                <input type="text" id="data-input" placeholder="<名前#身長> <名前#身長> ..." value="<佐藤#102> <鈴木#115> <高橋#230> <田中#187> <伊藤#145> <渡辺#210> <山本#172> <中村#190> <小林#158> <加藤#205>">
+            </div>
+
+            <div id="checkbox-container" class="checkbox-area"></div>
+
+            <div class="chart-wrapper">
+                <canvas id="heightChart" height="400"></canvas>
+            </div>
         </div>
-        <div id="checkbox-container"></div>
-        <canvas id="heightChart"  height="500px"></canvas>
     </div>
+
+    <footer style="text-align:center;padding:24px 0 8px;font-size:0.82em;">
+        <a href="https://mayholiholi.github.io/" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,0.6);text-decoration:none;">&larr; 他のツール</a>
+    </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const dataInput = document.getElementById('data-input');
@@ -77,49 +160,63 @@
             const ctx = document.getElementById('heightChart').getContext('2d');
             let chart;
 
+            // グラデーションカラーパレット
+            const palette = [
+                { bg: 'rgba(102, 126, 234, 0.55)', border: '#667eea' },
+                { bg: 'rgba(118, 75, 162, 0.55)',  border: '#764ba2' },
+                { bg: 'rgba(246, 121, 93, 0.55)',   border: '#f6795d' },
+                { bg: 'rgba(0, 198, 177, 0.55)',    border: '#00c6b1' },
+                { bg: 'rgba(255, 179, 71, 0.55)',   border: '#ffb347' },
+                { bg: 'rgba(78, 205, 196, 0.55)',   border: '#4ecdc4' },
+                { bg: 'rgba(255, 107, 129, 0.55)',  border: '#ff6b81' },
+                { bg: 'rgba(52, 172, 224, 0.55)',   border: '#34ace0' },
+                { bg: 'rgba(179, 136, 255, 0.55)',  border: '#b388ff' },
+                { bg: 'rgba(255, 159, 67, 0.55)',   border: '#ff9f43' },
+            ];
+
+            function getColor(index) {
+                return palette[index % palette.length];
+            }
+
             function parseInputData(input) {
-                return input.split(' ').map(item => {
+                return input.split(/\s+/).filter(Boolean).map(item => {
                     const [name, height] = item.replace(/[<>]/g, '').split('#');
                     return { name, height: parseInt(height) };
-                });
+                }).filter(item => item.name && !isNaN(item.height));
             }
 
             function generateCheckboxes(data) {
                 checkboxContainer.innerHTML = '';
                 data.forEach((item, index) => {
+                    const chip = document.createElement('label');
+                    chip.className = 'chip active';
+
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.id = `checkbox-${index}`;
                     checkbox.checked = true;
                     checkbox.dataset.index = index;
-                    checkbox.addEventListener('change', updateChart);
+                    checkbox.addEventListener('change', function() {
+                        chip.classList.toggle('active', this.checked);
+                        updateChart();
+                    });
 
-                    const label = document.createElement('label');
-                    label.htmlFor = `checkbox-${index}`;
-                    label.textContent = item.name;
+                    const text = document.createElement('span');
+                    text.textContent = item.name;
 
-                    checkboxContainer.appendChild(checkbox);
-                    checkboxContainer.appendChild(label);
+                    chip.appendChild(checkbox);
+                    chip.appendChild(text);
+                    checkboxContainer.appendChild(chip);
                 });
             }
 
             function generateChart(data) {
-                const filteredData = data.filter((_, index) => document.getElementById(`checkbox-${index}`).checked);
+                const filteredData = data.filter((_, index) => {
+                    const cb = document.getElementById(`checkbox-${index}`);
+                    return cb && cb.checked;
+                });
                 const labels = filteredData.map(item => item.name);
                 const heights = filteredData.map(item => item.height);
-                const colors = [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)',
-                    'rgba(199, 199, 199, 0.2)',
-                    'rgba(83, 102, 255, 0.2)',
-                    'rgba(250, 159, 64, 0.2)',
-                    'rgba(150, 100, 200, 0.2)'
-                ];
-                const borderColors = colors.map(color => color.replace('0.2', '1'));
 
                 if (chart) {
                     chart.destroy();
@@ -132,49 +229,56 @@
                         datasets: [{
                             label: '身長 (cm)',
                             data: heights,
-                            backgroundColor: colors.slice(0, heights.length),
-                            borderColor: borderColors.slice(0, heights.length),
-                            borderWidth: 1,
-                            hoverBackgroundColor: 'rgba(0, 0, 0, 0.2)',
+                            backgroundColor: heights.map((_, i) => getColor(i).bg),
+                            borderColor: heights.map((_, i) => getColor(i).border),
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: true,
+                        animation: {
+                            duration: 400,
+                            easing: 'easeOutQuart',
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
                                 ticks: {
-                                    color: '#555',
-                                    font: {
-                                        size: 14
-                                    }
+                                    color: '#888',
+                                    font: { size: 12 },
+                                    callback: v => v + ' cm',
                                 },
                                 grid: {
-                                    color: 'rgba(0, 0, 0, 0.1)'
-                                }
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                },
+                                border: { display: false },
                             },
                             x: {
                                 ticks: {
                                     color: '#555',
-                                    font: {
-                                        size: 14
-                                    }
+                                    font: { size: 13, weight: '600' },
                                 },
-                                grid: {
-                                    display: false
-                                }
+                                grid: { display: false },
+                                border: { display: false },
                             }
                         },
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                backgroundColor: 'rgba(26, 26, 46, 0.9)',
                                 titleColor: '#fff',
-                                bodyColor: '#fff',
-                                borderColor: '#ddd',
-                                borderWidth: 1
+                                bodyColor: '#eee',
+                                titleFont: { size: 13, weight: '600' },
+                                bodyFont: { size: 12 },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    label: ctx => ctx.parsed.y + ' cm',
+                                },
                             }
                         }
                     }
